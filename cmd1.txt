@@ -1,0 +1,76 @@
+11.
+javac -cp "junit-platform-console-standalone-1.10.0.jar;src" src/calci/*.java
+Run All Tests
+java -jar junit-platform-console-standalone-1.10.0.jar execute -cp src --scan-class-path
+
+14.
+<plugins>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.11</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>test</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+
+16.  
+from http.server import SimpleHTTPRequestHandler, HTTPServer
+PORT = 5020
+class MyHandler(SimpleHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(b"<h1>Hello from Docker Python Container</h1>")
+server = HTTPServer(("0.0.0.0", PORT), MyHandler)
+print(f"Server running on port {PORT}...")
+server.serve_forever()
+
+FROM python:3.9-slim
+WORKDIR /app
+COPY app.py .
+EXPOSE 5020
+CMD ["python", "app.py"]
+
+import com.sun.net.httpserver.*;
+import java.net.InetSocketAddress;
+public class SimpleJavaServer {
+    public static void main(String[] args) throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress(5020), 0);
+        server.createContext("/", exchange -> {
+            String response = "<h1>Hello from Docker Java Container</h1>";
+            exchange.sendResponseHeaders(200, response.length());
+            exchange.getResponseBody().write(response.getBytes());
+            exchange.close();
+        });
+        server.start();
+        System.out.println("Server running on port 5020...");
+    }
+}
+# Use Java 17 JDK
+FROM eclipse-temurin:17-jdk
+# Set working directory
+WORKDIR /app
+# Copy Java file
+COPY SimpleJavaServer.java .
+# Compile Java
+RUN javac SimpleJavaServer.java
+# Run the program
+CMD ["java", "SimpleJavaServer"]
+
+docker build -f Dockerfile.app -t my-web-image .
+docker run -p 5020:5020 my-web-image
+
